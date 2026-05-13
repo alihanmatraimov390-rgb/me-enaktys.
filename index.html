@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#ffffff">
+<title>Enactus — Посещаемость</title>
+<script src="[https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js](https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js)"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+  <div class="hdr">
+    <div class="hdr-logo">
+      <div class="en-badge">ENACTUS</div>
+      <div class="hdr-info">
+        <div class="hdr-team" id="hTeam">Команда</div>
+        <div class="hdr-uni" id="hUni">Учёт посещаемости</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content" id="cnt">
+    <div class="page on" id="pg-journal">
+      <div class="wkbar">
+        <button class="wkb" onclick="cw(-1)">&#8249;</button>
+        <div class="wkmid">
+          <div class="wkt" id="wkT">—</div>
+          <div class="wks" id="wkS">—</div>
+        </div>
+        <button class="wkb" onclick="cw(1)">&#8250;</button>
+        <button class="now-btn" onclick="goNow()">Сегодня</button>
+      </div>
+      <div class="sg" id="statsG"></div>
+      <div id="mtgBanner"></div>
+      <div class="legend">
+        <div class="leg"><div class="ldot" style="background:var(--green)"></div>П — пришёл</div>
+        <div class="leg"><div class="ldot" style="background:var(--red)"></div>О — отсутствует</div>
+        <div class="leg" style="font-size:11px;color:#bbb">Нажмите на ячейку → смена статуса</div>
+      </div>
+      <div id="journalList"></div>
+    </div>
+
+    <div class="page" id="pg-meeting">
+      <button class="btn-or" style="margin-bottom:12px" onclick="openMtgSheet()">+ Новое собрание</button>
+      <div id="mtgList"></div>
+    </div>
+
+    <div class="page" id="pg-member">
+      <div class="card" style="padding:12px">
+        <select id="indSel" onchange="renderInd()"><option value="">— выберите участника —</option></select>
+      </div>
+      <div id="indContent"></div>
+    </div>
+
+    <div class="page" id="pg-report">
+      <div class="btn-row">
+        <button class="btn btn-main" onclick="dlWord()">📄 Скачать Word</button>
+        <button class="btn btn-lt" onclick="renderReport()">↺ Обновить</button>
+      </div>
+      <div id="repContent"><div class="empty"><div class="ei">📊</div>Нажмите «Обновить»</div></div>
+    </div>
+
+    <div class="page" id="pg-more">
+      <div class="slabel">Команда</div>
+      <div class="set-sec">
+        <div class="set-row"><div class="set-lbl">Название</div><input type="text" id="sTeam" class="set-si" placeholder="Enactus KSTU"></div>
+        <div class="set-row"><div class="set-lbl">Университет</div><input type="text" id="sUni" class="set-si" placeholder="Университет"></div>
+        <div class="set-row"><div class="set-lbl">Часов по умолч.</div><input type="number" id="sHrs" value="2" min="1" max="12" class="set-si"></div>
+      </div>
+
+      <div class="slabel">Рабочие дни</div>
+      <div class="set-sec"><div class="wd-row" id="wdC"></div></div>
+      <button class="btn-or" style="margin-bottom:14px" onclick="saveSet()">Сохранить настройки</button>
+
+      <div class="slabel">Проекты</div>
+      <div class="card">
+        <div id="projList"></div>
+        <input type="text" id="projInp" placeholder="Название проекта">
+        <button class="btn-or" onclick="addProj()">+ Добавить проект</button>
+      </div>
+
+      <div class="slabel">Участники команды</div>
+      <div class="card">
+        <input type="text" id="nName" placeholder="Имя и фамилия">
+        <select id="nRole">
+          <option value="member">Member</option>
+          <option value="vp">VP / Director</option>
+          <option value="president">President</option>
+          <option value="advisor">Faculty Advisor</option>
+        </select>
+        <button class="btn-or" onclick="addMember()">+ Добавить участника</button>
+      </div>
+      <div id="memberList"></div>
+
+      <div class="slabel">Данные</div>
+      <div class="btn-row">
+        <button class="btn btn-lt" onclick="expJ()">📤 Экспорт</button>
+        <button class="btn btn-lt" onclick="document.getElementById('impF').click()">📥 Импорт</button>
+      </div>
+      <input type="file" id="impF" accept=".json" style="display:none" onchange="impJ(event)">
+      <button class="btn btn-del" style="width:100%" onclick="clearAtt()">🗑 Очистить посещаемость</button>
+    </div>
+  </div>
+
+  <nav class="bnav">
+    <button class="bn on" onclick="gp('journal',this)"><span class="ic">📓</span>Журнал</button>
+    <button class="bn" onclick="gp('meeting',this)"><span class="ic">🗣️</span>Собрания</button>
+    <button class="bn" onclick="gp('member',this)"><span class="ic">👤</span>Участник</button>
+    <button class="bn" onclick="gp('report',this)"><span class="ic">📊</span>Отчёт</button>
+    <button class="bn" onclick="gp('more',this)"><span class="ic">⚙️</span>Ещё</button>
+  </nav>
+</div>
+
+<div class="overlay" id="ov" onclick="closeSheet()"></div>
+<div class="bsheet" id="tSheet">
+  <div class="bs-handle"></div>
+  <div class="bs-title" id="tsTitle">Время</div>
+  <div class="bs-row"><span class="bs-lbl">Начало</span><input class="set-si" style="width:100%" type="time" id="tsS" value="17:00"></div>
+  <div class="bs-row"><span class="bs-lbl">Конец</span><input class="set-si" style="width:100%" type="time" id="tsE" value="19:00"></div>
+  <div style="margin-bottom:12px">
+    <div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px">Проект</div>
+    <div class="pch" id="tsPr"></div>
+  </div>
+  <button class="btn-done" onclick="saveSheet()">Готово</button>
+</div>
+
+<div class="bsheet" id="mSheet">
+  <div class="bs-handle"></div>
+  <div class="bs-title">Новое собрание</div>
+  <div class="bs-row"><span class="bs-lbl">Дата</span><input class="set-si" style="width:100%" type="date" id="mDate"></div>
+  <div class="bs-row"><span class="bs-lbl">Начало</span><input class="set-si" style="width:100%" type="time" id="mStart" value="17:00"></div>
+  <div class="bs-row"><span class="bs-lbl">Конец</span><input class="set-si" style="width:100%" type="time" id="mEnd" value="19:00"></div>
+  <div style="margin-bottom:12px">
+    <div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px">Тема</div>
+    <textarea id="mTopic" placeholder="Тема собрания..." style="resize:vertical;min-height:70px"></textarea>
+  </div>
+  <div style="margin-bottom:12px">
+    <div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px">Проект</div>
+    <div class="pch" id="mPr"></div>
+  </div>
+  <button class="btn-done" onclick="saveMtg()">Сохранить собрание</button>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="script.js"></script>
+</body>
+</html>
